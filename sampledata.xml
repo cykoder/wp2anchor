@@ -38,6 +38,7 @@
 	<wp:author><wp:author_id>1</wp:author_id><wp:author_login>admin</wp:author_login><wp:author_email>sshellawell@gmail.com</wp:author_email><wp:author_display_name><![CDATA[admin]]></wp:author_display_name><wp:author_first_name><![CDATA[]]></wp:author_first_name><wp:author_last_name><![CDATA[]]></wp:author_last_name></wp:author>
 
 	<wp:category><wp:term_id>1</wp:term_id><wp:category_nicename>uncategorized</wp:category_nicename><wp:category_parent></wp:category_parent><wp:cat_name><![CDATA[Uncategorized]]></wp:cat_name></wp:category>
+	<wp:category><wp:term_id>2</wp:term_id><wp:category_nicename>another-category</wp:category_nicename><wp:category_parent></wp:category_parent><wp:cat_name><![CDATA[Another category]]></wp:cat_name></wp:category>
 	<wp:tag><wp:term_id>10</wp:term_id><wp:tag_slug>awesome</wp:tag_slug><wp:tag_name><![CDATA[awesome]]></wp:tag_name></wp:tag>
 	<wp:tag><wp:term_id>8</wp:term_id><wp:tag_slug>cloud</wp:tag_slug><wp:tag_name><![CDATA[cloud]]></wp:tag_name></wp:tag>
 	<wp:tag><wp:term_id>4</wp:term_id><wp:tag_slug>dust</wp:tag_slug><wp:tag_name><![CDATA[dust]]></wp:tag_name></wp:tag>
@@ -107,14 +108,6 @@
 		<wp:post_type>post</wp:post_type>
 		<wp:post_password></wp:post_password>
 		<wp:is_sticky>0</wp:is_sticky>
-		<category domain="post_tag" nicename="awesome"><![CDATA[awesome]]></category>
-		<category domain="post_tag" nicename="cloud"><![CDATA[cloud]]></category>
-		<category domain="post_tag" nicename="dust"><![CDATA[dust]]></category>
-		<category domain="post_tag" nicename="dynamic"><![CDATA[dynamic]]></category>
-		<category domain="post_tag" nicename="its"><![CDATA[its]]></category>
-		<category domain="post_tag" nicename="tag"><![CDATA[tag]]></category>
-		<category domain="post_tag" nicename="testing"><![CDATA[testing]]></category>
-		<category domain="post_tag" nicename="the"><![CDATA[the]]></category>
 		<category domain="category" nicename="uncategorized"><![CDATA[Uncategorized]]></category>
 		<wp:postmeta>
 			<wp:meta_key>_edit_last</wp:meta_key>

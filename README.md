@@ -9,6 +9,7 @@ Supported data
 wp2anchor imports:
 
 *	Site meta data
+*	Categories
 *	Posts
 *	Pages
 
