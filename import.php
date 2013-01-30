@@ -34,6 +34,12 @@
 //Temporary file data URL, adding upload form later
 $file = "sampledata.xml";
 
+//Temp setting MySQL data here
+$mysqlInfo = array("host" => "localhost",
+				   "username" => "root",
+				   "password" => "NOPASSWORDFORYOU",
+				   "database" => "anchor");
+
 /*
 	Function to get the category ID from array
 */
@@ -48,6 +54,14 @@ function getCategoryID($title, $haystack)
 		}
 		$i++;
 	}
+}
+
+/*
+	Function to log what's happening
+*/
+function wp2anchor_log($txt)
+{
+	echo $txt . "<br />\n";
 }
 
 //Get file contents (you'll see why soon)
@@ -96,7 +110,7 @@ foreach($wpData->item as $wpPost)
 								 "status"		=> $status,
 								 "category"		=> getCategoryID((string)$wpPost->category, $categories),
 								 "comments"		=> (($wpPost->wp_comment_status == "open") ? 1 : 0)));
-		
+
 		//Get the comments
 		foreach($wpPost->wp_comment as $wpComment)
 		{
@@ -121,7 +135,100 @@ foreach($wpData->item as $wpPost)
 	}
 }
 
+//Connect to MySQL
+$mysql = new mysqli($mysqlInfo["host"], $mysqlInfo["username"], $mysqlInfo["password"], $mysqlInfo["database"]);
+if($mysql->connect_errno > 0)
+{
+    die('Unable to connect to database [' . $mysql->connect_error . ']');
+}
+else
+{
+	wp2anchor_log("Connected to the database: " . $mysqlInfo["database"]);
+}
+
+//Truncate tables we need to override
+if(!$mysql->query("TRUNCATE TABLE `categories`") ||
+   !$mysql->query("TRUNCATE TABLE `comments`") ||
+   !$mysql->query("TRUNCATE TABLE `page_meta`") ||
+   !$mysql->query("TRUNCATE TABLE `post_meta`") ||
+   !$mysql->query("TRUNCATE TABLE `posts`"))
+{
+    die('Unable to clear database [' . $mysql->error . ']');
+}
+else
+{
+	wp2anchor_log("Cleared tables: `categories`, `comments`, `page_meta`, `post_meta`, `posts`");
+}
+
+//Update site meta data
+foreach($siteMeta as $key=>$value)
+{
+	if($mysql->query("UPDATE `meta` SET  `value` =  '" . $mysql->escape_string($value) . "' WHERE  `key` =  '" . $mysql->escape_string($key) . "';"))
+	{
+		wp2anchor_log("Set site meta [<em>" . $key . "</em>]" . " to [<em>" . $value . "</em>]");
+	}
+	else
+	{
+		die("Unable to set meta data [" . $mysql->error . "]");
+	}
+}
+
+//Insert categories
+foreach($categories as $category)
+{
+	if($mysql->query("INSERT INTO `categories` (`id`, `title`, `slug`, `description`) VALUES (NULL, '" . $mysql->escape_string($category["title"]) . "', '" . $mysql->escape_string($category["slug"]) . "', '" . $mysql->escape_string($category["description"]) . "');"))
+	{
+		wp2anchor_log("Added category [<em>" . $category["title"] . "</em>]");
+	}
+	else
+	{
+		die("Unable to add categories [" . $mysql->error . "]");
+	}
+}
+
+//Insert posts
+foreach($posts as $post)
+{
+	if($mysql->query("INSERT INTO `posts` (`id`, `title`, `slug`, `description`, `html`, `css`, `js`, `created`, `author`, `category`, `status`, `comments`) VALUES (NULL, '" . $mysql->escape_string($post["title"]) . "', '" . $mysql->escape_string($post["slug"]) . "', '" . $mysql->escape_string($post["description"]) . "', '" . $mysql->escape_string($post["html"]) . "', '', '', '" . $mysql->escape_string($post["created"]) . "', '1', '" . $mysql->escape_string($post["category"]) . "', '" . $mysql->escape_string($post["status"]) . "', '" . $mysql->escape_string($post["comments"]) . "');"))
+	{
+		wp2anchor_log("Added post [<em>" . $post["title"] . "</em>]");
+	}
+	else
+	{
+		die("Unable to add posts [" . $mysql->error . "]");
+	}
+}
+
+//Insert pages
+foreach($pages as $page)
+{
+	if($mysql->query("INSERT INTO `pages` (`id`, `slug`, `name`, `title`, `content`, `status`, `redirect`) VALUES (NULL, '" . $mysql->escape_string($page["slug"]) . "', '" . $mysql->escape_string($page["name"]) . "', '" . $mysql->escape_string($page["title"]) . "', '" . $mysql->escape_string($page["content"]) . "', '" . $mysql->escape_string($page["status"]) . "', '" . $mysql->escape_string($page["redirect"]) . "');"))
+	{
+		wp2anchor_log("Added page [<em>" . $page["title"] . "</em>]");
+	}
+	else
+	{
+		die("Unable to add pages [" . $mysql->error . "]");
+	}
+}
+
+//Insert comments
+foreach($comments as $comment)
+{
+	if($mysql->query("INSERT INTO `comments` (`id`, `post`, `status`, `date`, `name`, `email`, `text`) VALUES (NULL, '" . $mysql->escape_string($comment["post"]) . "', '" . $mysql->escape_string($comment["status"]) . "', '" . $mysql->escape_string($comment["date"]) . "', '" . $mysql->escape_string($comment["name"]) . "', '" . $mysql->escape_string($comment["email"]) . "', '" . $mysql->escape_string($comment["text"]) . "');"))
+	{
+		wp2anchor_log("Added comment by [<em>" . $comment["name"] . "</em>]");
+	}
+	else
+	{
+		die("Unable to add comments [" . $mysql->error . "]");
+	}
+}
+
+//Close MySQL
+$mysql->close();
+
 //Print XML
-print_r($wpData);
+//print_r($wpData);
 
 ?>
