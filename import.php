@@ -96,6 +96,18 @@ foreach($wpData->item as $wpPost)
 								 "status"		=> $status,
 								 "category"		=> getCategoryID((string)$wpPost->category, $categories),
 								 "comments"		=> (($wpPost->wp_comment_status == "open") ? 1 : 0)));
+		
+		//Get the comments
+		foreach($wpPost->wp_comment as $wpComment)
+		{
+			//Insert into comments array
+			array_push($comments, array("post"		=> count($posts),
+										"status"	=> ($wpComment->wp_comment_approved == 1) ? "approved" : "pending",
+										"date"		=> (string)$wpComment->wp_comment_date,
+										"name"		=> (string)$wpComment->wp_comment_author,
+										"email"		=> (string)$wpComment->wp_comment_author_email,
+										"text"		=> (string)$wpComment->wp_comment_content));
+		}
 	}
 	else if($wpPost->wp_post_type == "page")
 	{
@@ -107,15 +119,9 @@ foreach($wpData->item as $wpPost)
 								 "status"		=> $status,
 								 "redirect"		=> ""));
 	}
-
-	//Get the comments
-	foreach($wpPost->wp_comment as $wpComment)
-	{
-		print_r($wpComment);
-	}
 }
 
 //Print XML
-print_r($comments);
+print_r($wpData);
 
 ?>

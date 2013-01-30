@@ -12,6 +12,8 @@ wp2anchor imports:
 *	Categories
 *	Posts
 *	Pages
+*	Comments
+
 
 Credits
 =======
