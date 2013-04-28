@@ -177,24 +177,27 @@ if($file != "" && isset($mysqlInfo))
 	{
 		wp2anchor_log("Connected to the database: " . $mysqlInfo["database"]);
 
+		//Set prefix
+		$prefix = mysql_real_escape_string($_POST['prefix']);
+
 		//Truncate tables we need to override
-		if(!@$mysql->query("TRUNCATE TABLE `categories`") ||
-		   !@$mysql->query("TRUNCATE TABLE `comments`") ||
-		   !@$mysql->query("TRUNCATE TABLE `page_meta`") ||
-		   !@$mysql->query("TRUNCATE TABLE `post_meta`") ||
-		   !@$mysql->query("TRUNCATE TABLE `posts`"))
+		if(!@$mysql->query("TRUNCATE TABLE `" . $prefix . "categories`") ||
+		   !@$mysql->query("TRUNCATE TABLE `" . $prefix . "comments`") ||
+		   !@$mysql->query("TRUNCATE TABLE `" . $prefix . "page_meta`") ||
+		   !@$mysql->query("TRUNCATE TABLE `" . $prefix . "post_meta`") ||
+		   !@$mysql->query("TRUNCATE TABLE `" . $prefix . "posts`"))
 		{
 		    wp2anchor_log('Unable to clear database [' . @$mysql->error . ']');
 		}
 		else
 		{
-			wp2anchor_log("Cleared tables: `categories`, `comments`, `page_meta`, `post_meta`, `posts`");
+			wp2anchor_log("Cleared tables: `" . $prefix . "categories`, `" . $prefix . "comments`, `" . $prefix . "page_meta`, `" . $prefix . "post_meta`, `" . $prefix . "posts`");
 		}
 
 		//Update site meta data
 		foreach($siteMeta as $key=>$value)
 		{
-			if(@$mysql->query("UPDATE `meta` SET  `value` =  '" . $mysql->escape_string($value) . "' WHERE  `key` =  '" . $mysql->escape_string($key) . "';"))
+			if(@$mysql->query("UPDATE `" . $prefix . "meta` SET  `value` =  '" . $mysql->escape_string($value) . "' WHERE  `key` =  '" . $mysql->escape_string($key) . "';"))
 			{
 				wp2anchor_log("Set site meta [<em>" . $key . "</em>]" . " to [<em>" . $value . "</em>]");
 			}
@@ -208,7 +211,7 @@ if($file != "" && isset($mysqlInfo))
 		//Insert categories
 		foreach($categories as $category)
 		{
-			if(@$mysql->query("INSERT INTO `categories` (`id`, `title`, `slug`, `description`) VALUES (NULL, '" . $mysql->escape_string($category["title"]) . "', '" . $mysql->escape_string($category["slug"]) . "', '" . $mysql->escape_string($category["description"]) . "');"))
+			if(@$mysql->query("INSERT INTO `" . $prefix . "categories` (`id`, `title`, `slug`, `description`) VALUES (NULL, '" . $mysql->escape_string($category["title"]) . "', '" . $mysql->escape_string($category["slug"]) . "', '" . $mysql->escape_string($category["description"]) . "');"))
 			{
 				wp2anchor_log("Added category [<em>" . $category["title"] . "</em>]");
 			}
@@ -222,7 +225,7 @@ if($file != "" && isset($mysqlInfo))
 		//Insert posts
 		foreach($posts as $post)
 		{
-			if(@$mysql->query("INSERT INTO `posts` (`id`, `title`, `slug`, `description`, `html`, `css`, `js`, `created`, `author`, `category`, `status`, `comments`) VALUES (NULL, '" . $mysql->escape_string($post["title"]) . "', '" . $mysql->escape_string($post["slug"]) . "', '" . $mysql->escape_string($post["description"]) . "', '" . $mysql->escape_string($post["html"]) . "', '', '', '" . $mysql->escape_string($post["created"]) . "', '1', '" . $mysql->escape_string($post["category"]) . "', '" . $mysql->escape_string($post["status"]) . "', '" . $mysql->escape_string($post["comments"]) . "');"))
+			if(@$mysql->query("INSERT INTO `" . $prefix . "posts` (`id`, `title`, `slug`, `description`, `html`, `css`, `js`, `created`, `author`, `category`, `status`, `comments`) VALUES (NULL, '" . $mysql->escape_string($post["title"]) . "', '" . $mysql->escape_string($post["slug"]) . "', '" . $mysql->escape_string($post["description"]) . "', '" . $mysql->escape_string($post["html"]) . "', '', '', '" . $mysql->escape_string($post["created"]) . "', '1', '" . $mysql->escape_string($post["category"]) . "', '" . $mysql->escape_string($post["status"]) . "', '" . $mysql->escape_string($post["comments"]) . "');"))
 			{
 				wp2anchor_log("Added post [<em>" . $post["title"] . "</em>]");
 			}
@@ -236,7 +239,7 @@ if($file != "" && isset($mysqlInfo))
 		//Insert pages
 		foreach($pages as $page)
 		{
-			if(@$mysql->query("INSERT INTO `pages` (`id`, `slug`, `name`, `title`, `content`, `status`, `redirect`) VALUES (NULL, '" . $mysql->escape_string($page["slug"]) . "', '" . $mysql->escape_string($page["name"]) . "', '" . $mysql->escape_string($page["title"]) . "', '" . $mysql->escape_string($page["content"]) . "', '" . $mysql->escape_string($page["status"]) . "', '" . $mysql->escape_string($page["redirect"]) . "');"))
+			if(@$mysql->query("INSERT INTO `" . $prefix . "pages` (`id`, `slug`, `name`, `title`, `content`, `status`, `redirect`) VALUES (NULL, '" . $mysql->escape_string($page["slug"]) . "', '" . $mysql->escape_string($page["name"]) . "', '" . $mysql->escape_string($page["title"]) . "', '" . $mysql->escape_string($page["content"]) . "', '" . $mysql->escape_string($page["status"]) . "', '" . $mysql->escape_string($page["redirect"]) . "');"))
 			{
 				wp2anchor_log("Added page [<em>" . $page["title"] . "</em>]");
 			}
@@ -250,7 +253,7 @@ if($file != "" && isset($mysqlInfo))
 		//Insert comments
 		foreach($comments as $comment)
 		{
-			if(@$mysql->query("INSERT INTO `comments` (`id`, `post`, `status`, `date`, `name`, `email`, `text`) VALUES (NULL, '" . $mysql->escape_string($comment["post"]) . "', '" . $mysql->escape_string($comment["status"]) . "', '" . $mysql->escape_string($comment["date"]) . "', '" . $mysql->escape_string($comment["name"]) . "', '" . $mysql->escape_string($comment["email"]) . "', '" . $mysql->escape_string($comment["text"]) . "');"))
+			if(@$mysql->query("INSERT INTO `" . $prefix . "comments` (`id`, `post`, `status`, `date`, `name`, `email`, `text`) VALUES (NULL, '" . $mysql->escape_string($comment["post"]) . "', '" . $mysql->escape_string($comment["status"]) . "', '" . $mysql->escape_string($comment["date"]) . "', '" . $mysql->escape_string($comment["name"]) . "', '" . $mysql->escape_string($comment["email"]) . "', '" . $mysql->escape_string($comment["text"]) . "');"))
 			{
 				wp2anchor_log("Added comment by [<em>" . $comment["name"] . "</em>]");
 			}
@@ -376,6 +379,13 @@ if($file != "" && isset($mysqlInfo))
 		    			<input id="name" name="name" value="anchor">
 
 		    			<i>Your database’s name.</i>
+		    		</p>
+
+					<p>
+		    			<label for="name">Table Prefix</label>
+		    			<input id="prefix" name="prefix" value="anchor_">
+
+		    			<i>Your database’s table prefix.</i>
 		    		</p>
 
 					<p>
