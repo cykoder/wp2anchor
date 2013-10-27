@@ -178,7 +178,7 @@ if($file != "" && isset($mysqlInfo))
 		wp2anchor_log("Connected to the database: " . $mysqlInfo["database"]);
 
 		//Set prefix
-		$prefix = mysql_real_escape_string($_POST['prefix']);
+		$prefix = $mysql->real_escape_string($_POST['prefix']);
 
 		//Truncate tables we need to override
 		if(!@$mysql->query("TRUNCATE TABLE `" . $prefix . "categories`") ||
