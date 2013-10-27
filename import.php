@@ -41,22 +41,8 @@ function wp2anchor_log($txt)
 	$output .= $txt . "<br />\n";
 }
 
-//Are we using a user friendly version?
-$userFriendly=true;
 $hasImported=false;
-
-if(!$userFriendly)
-{
-	//XML file URL
-	$file = "sampledata.xml";
-
-	//MySQL information
-	$mysqlInfo = array("host" => "localhost",
-					   "username" => "root",
-					   "password" => "mypass",
-					   "database" => "anchor");
-}
-else if(isset($_POST['host']) && isset($_POST['port']) && isset($_POST['user']) && isset($_POST['pass']) && isset($_POST['name']))
+if(isset($_POST['host']) && isset($_POST['port']) && isset($_POST['user']) && isset($_POST['pass']) && isset($_POST['name']))
 {
 	//Upload the XML file
 	if($_FILES["xmlfile"]["error"]  == 0)
@@ -73,12 +59,34 @@ else if(isset($_POST['host']) && isset($_POST['port']) && isset($_POST['user']) 
 	else
 	{
 		//Log error
-		wp2anchor_log("File upload error [" . $_FILES["xmlfile"]["error"] . "]");
+		switch($_FILES["xmlfile"]["error"])
+		{
+			case 1:
+			case 2:
+				wp2anchor_log("File is too big, maybe alter the upload_max_filesize directive in php.ini?");
+			break;
+
+			case 3:
+				wp2anchor_log("The file was only partially uploaded, try again!");
+			break;
+
+			case 4:
+				wp2anchor_log("No file was uploaded, you sure you selected one?");
+			break;
+
+			case 6:
+				wp2anchor_log("Missing a temporary folder <a href=\"http://bit.ly/HkrsDA\">http://bit.ly/HkrsDA</a>");
+			break;
+
+			default:
+				wp2anchor_log("File upload error [" . $_FILES["xmlfile"]["error"] . "]");
+			break;
+		}
 	}
 }
 
 //Only run if file and mysql data exist
-if($file != "" && isset($mysqlInfo))
+if(isset($file) && $file != "" && isset($mysqlInfo))
 {
 	/*
 		Function to get the category ID from array
@@ -269,9 +277,6 @@ if($file != "" && isset($mysqlInfo))
 		//Close MySQL
 		@$mysql->close();
 	}
-
-	//Output
-	if(!$userFriendly) echo $output;
 }
 ?>
 <?php
