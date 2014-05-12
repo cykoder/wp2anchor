@@ -176,7 +176,14 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
 	}
 
 	//Connect to MySQL
-	@$mysql = new mysqli($mysqlInfo["host"], $mysqlInfo["username"], $mysqlInfo["password"], $mysqlInfo["database"]);
+	class mysqli_utf extends mysqli {
+  		public function __construct($host = NULL, $username = NULL, $password = NULL, $database = NULL) {
+    		parent::__construct($host, $username, $password, $database);
+    		$this->set_charset("utf8");
+  		}
+	}
+	
+	@$mysql = new mysqli_utf($mysqlInfo["host"], $mysqlInfo["username"], $mysqlInfo["password"], $mysqlInfo["database"]);
 	if($mysql->connect_errno > 0)
 	{
 	    wp2anchor_log('Unable to connect to database [' . @$mysql->connect_error . ']');
