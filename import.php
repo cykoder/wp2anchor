@@ -110,11 +110,27 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
 	//Replace namespaces (<wp:x>)
 	$fileContents = preg_replace('~(</?|\s)([a-z0-9_]+):~is', '$1$2_', $fileContents);
 
+	//Prepare xml error logger
+	libxml_use_internal_errors(true);
+
 	//Create an XML reader
 	$xml = simplexml_load_string($fileContents, null, LIBXML_NOCDATA);
 	$wpData = $xml->channel;
 
-	//Get the site metadata
+	//Log errors (if any)
+	if (!$xml)
+	{
+		$errors = libxml_get_errors();
+		wp2anchor_log('<strong>There are errors in the imported xml file:</strong>');
+		foreach ($errors as $error)
+		{
+			wp2anchor_log('Error '.$error->code.': '.trim($error->message));
+		}
+		wp2anchor_log('');
+		libxml_clear_errors();
+	}
+
+  	//Get the site metadata
 	$siteMeta = array("sitename"		=> $wpData->title,
 					  "description" 	=> $wpData->description);
 
