@@ -35,8 +35,10 @@
  * - Store categories and tags in new extended fields, so they won't be lost
  *   in the import process.
  * - Save WordPress category descriptions.
+ *
  * @author      neverbot
  * @link        https://github.com/neverbot
+ *
  */
 
 
@@ -126,7 +128,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
   */
   function getCategoryID($title, $haystack)
   {
-    $i=1;
+    $i = 1;
     foreach($haystack as $arr)
     {
       if($arr["title"] == $title)
@@ -135,7 +137,9 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
       }
       $i++;
     }
+    return 0;
   }
+
 
   // Get file contents (you'll see why soon)
   $fileContents = file_get_contents($file);
@@ -187,15 +191,27 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
 
   foreach($wpData->wp_category as $wpCategory)
   {
-    array_push($categories, array("title"    => (string)$wpCategory->wp_cat_name,
-                    "slug"    => (string)$wpCategory->wp_category_nicename,
-                    "description" => (string)$wpCategory->wp_category_description));
+    array_push($categories, array("title"       => (string)$wpCategory->wp_cat_name,
+                                  "slug"        => (string)$wpCategory->wp_category_nicename,
+                                  "description" => (string)$wpCategory->wp_category_description));
   }
+
+  // Get the tags
+  $tags = array();
+
+  foreach($wpData->wp_tag as $wpTag)
+  {
+    array_push($tags, array("title"       => (string)$wpTag->wp_tag_name,
+                            "slug"        => (string)$wpTag->wp_tag_slug,
+                            "description" => (string)$wpTag->wp_tag_description));
+  }
+
 
   // Get the posts and pages
   $posts = array();
   $pages = array();
   $comments = array();
+
   foreach($wpData->item as $wpPost)
   {
     // Get status
@@ -208,27 +224,43 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
       // Using multiple categories
       if ($useMultipleCategories == true)
       {
+        $postCategories = array();
+        $postTags = array();
+
+        foreach($wpPost->category as $term)
+        {
+          // It's indeed a category
+          if (($cat = getCategoryID((string)$term, $categories)) != 0) 
+            array_push($postCategories, $term);
+          else
+            // If it's not a category, it's a tag
+            array_push($postTags, $term);
+        }
+
         // Insert into posts array
         array_push($posts, array("title"    => (string)$wpPost->title,
-                   "description"  => (string)$wpPost->description,
-                   "slug"      => (string)$wpPost->wp_post_name,
-                   "html"      => (string)$wpPost->content_encoded,
-                   "created"    => (string)$wpPost->wp_post_date,
-                   "author"    => 1,
-                   "status"    => $status,
+                   "description" => (string)$wpPost->description,
+                   "slug"        => (string)$wpPost->wp_post_name,
+                   "html"        => (string)$wpPost->content_encoded,
+                   "created"     => (string)$wpPost->wp_post_date,
+                   "author"      => 1,
+                   "status"      => $status,
                    "category"    => getCategoryID((string)$importedCategory[0], $categories),
-                   "comments"    => (($wpPost->wp_comment_status == "open") ? 1 : 0)));
+                   "comments"    => (($wpPost->wp_comment_status == "open") ? 1 : 0),
+                   "saved-cat"   => implode(',', $postCategories),
+                   "saved-tag"   => implode(',', $postTags),
+                   ));
       }
       else
       {
         // Insert into posts array
         array_push($posts, array("title"    => (string)$wpPost->title,
-                   "description"  => (string)$wpPost->description,
-                   "slug"      => (string)$wpPost->wp_post_name,
-                   "html"      => (string)$wpPost->content_encoded,
-                   "created"    => (string)$wpPost->wp_post_date,
-                   "author"    => 1,
-                   "status"    => $status,
+                   "description" => (string)$wpPost->description,
+                   "slug"        => (string)$wpPost->wp_post_name,
+                   "html"        => (string)$wpPost->content_encoded,
+                   "created"     => (string)$wpPost->wp_post_date,
+                   "author"      => 1,
+                   "status"      => $status,
                    "category"    => getCategoryID((string)$wpPost->category, $categories),
                    "comments"    => (($wpPost->wp_comment_status == "open") ? 1 : 0)));
       }
@@ -241,7 +273,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
                       "status"  => ($wpComment->wp_comment_approved == 1) ? "approved" : "pending",
                       "date"    => (string)$wpComment->wp_comment_date,
                       "name"    => (string)$wpComment->wp_comment_author,
-                      "email"    => (string)$wpComment->wp_comment_author_email,
+                      "email"   => (string)$wpComment->wp_comment_author_email,
                       "text"    => (string)$wpComment->wp_comment_content));
       }
     }
@@ -249,11 +281,11 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
     {
       // Insert into pages array
       array_push($pages, array("name"      => (string)$wpPost->title,
-                   "title"    => (((string)$wpPost->description != "") ? (string)$wpPost->description : (string)$wpPost->title),
+                   "title"     => (((string)$wpPost->description != "") ? (string)$wpPost->description : (string)$wpPost->title),
                    "slug"      => (string)$wpPost->wp_post_name,
-                   "content"    => (string)$wpPost->content_encoded,
+                   "content"   => (string)$wpPost->content_encoded,
                    "status"    => $status,
-                   "redirect"    => ""));
+                   "redirect"  => ""));
     }
   }
 
@@ -289,7 +321,13 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
     }
     else
     {
-      wp2anchor_log("Cleared tables: `" . $prefix . "categories`, `" . $prefix . "comments`, `" . $prefix . "page_meta`, `" . $prefix . "post_meta`, `" . $prefix . "posts`");
+      wp2anchor_log("Cleared tables: " . $prefix . "categories, " . 
+                                         $prefix . "comments, " . 
+                                         $prefix . "extend, " . 
+                                         $prefix . "page_meta, " . 
+                                         $prefix . "post_meta, " . 
+                                         $prefix . "posts" .
+                                         ".");
     }
 
     // Update site meta data
@@ -340,18 +378,37 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
       }
     }
 
+    $postId = 1;
+    
     // Insert posts
     foreach($posts as $post)
     {
       if(@$mysql->query("INSERT INTO `" . $prefix . "posts` (`id`, `title`, `slug`, `description`, `html`, `css`, `js`, `created`, `author`, `category`, `status`, `comments`) VALUES (NULL, '" . $mysql->escape_string($post["title"]) . "', '" . $mysql->escape_string($post["slug"]) . "', '" . $mysql->escape_string($post["description"]) . "', '" . $mysql->escape_string($post["html"]) . "', '', '', '" . $mysql->escape_string($post["created"]) . "', '1', '" . $mysql->escape_string($post["category"]) . "', '" . $mysql->escape_string($post["status"]) . "', '" . $mysql->escape_string($post["comments"]) . "');"))
       {
         wp2anchor_log("Added post [<em>" . $post["title"] . "</em>]");
+
+        // Insert meta info (categories and tags)
+        if(@$mysql->query("INSERT INTO `" . $prefix . "post_meta` ".
+            "(`id`, `post`, `extend`, `data`) VALUES ".
+            "(NULL, '".$postId."', '1', '{\"text\":\"wp2anchor\"}')".
+            ((empty($post['saved-cat']))?'':(", (NULL, '".$postId."', '2', '{\"text\":\"".$post['saved-cat']."\"}')")).
+            ((empty($post['saved-tag']))?'':(", (NULL, '".$postId."', '3', '{\"text\":\"".$post['saved-tag']."\"}')")).
+            ";"))
+        {
+        }
+        else
+        {
+          wp2anchor_log("Unable to add post meta info [" . @$mysql->error . "]");
+        }
+
       }
       else
       {
         wp2anchor_log("Unable to add posts [" . @$mysql->error . "]");
         break;
       }
+
+      $postId++;
     }
 
     // Insert pages
@@ -519,7 +576,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
     <?php } ?>
     <small>
       Wordpress to Anchor importer by <a href="http:// samhellawell.info">Sam Hellawell</a>.
-      Some modifications done by <a href="https://github.com/neverbot">neverbot</a>
+      Some modifications done by <a href="https://github.com/neverbot">neverbot</a>.
       Using Anchor's installation template.
     </small>
   </body>
