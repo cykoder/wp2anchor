@@ -30,7 +30,11 @@
  *              Company: http://outerground.com
  *              GitHub Repository: https://github.com/SamHellawell/wp2anchor
  * 
- * Modifications in namespace tag prefixes:
+ * - Use of libxml internal errors info.
+ * - Modifications in namespace tag prefixes.
+ * - Store categories and tags in new extended fields, so they won't be lost
+ *   in the import process.
+ * - Save WordPress category descriptions.
  * @author      neverbot
  * @link        https://github.com/neverbot
  */
@@ -39,8 +43,26 @@
 // List of substitutions/fixes needed to be done in the xml wordpress file
 // before the import process. This namespace prefixes will be
 // changed from whatever:xxx to whatever_xxx
-
 $namespaces = ['xmlns:', 'wp:', 'dc:', 'content:', 'excerpt:'];
+
+// Anchor only allows one category per posts, while we can have many in a 
+// wordpress post. If $useMultipleCategories == true, new fields
+// will be added to the anchor_extend table to store this info per post
+// (won't be usable from anchor, but will be stored for future use, 
+// like a plugin who admits multiple categories per post)
+$useMultipleCategories = true;
+// Name, slug and description of the common category for all the 
+// imported posts
+// Only used if $useMultipleCategories == true
+$importedCategory = ['Imported', 
+                     'imported',
+                     'Post imported with wp2anchor'];
+// Fields for extended post info                     
+// Only used if $useMultipleCategories == true
+$importedExtendedInfo = array('imported-by' => 'Imported by',
+                              'imported-categories' => 'Imported categories',
+                              'imported-tags' => 'Imported tags');
+
 
 /*
   Function to log what's happening
@@ -154,11 +176,20 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
 
   // Get the categories
   $categories = array();
+
+  // Using multiple categories
+  if ($useMultipleCategories == true)
+  {
+    array_push($categories, array('title' => $importedCategory[0],
+                    'slug' => $importedCategory[1],
+                    'description' => $importedCategory[2]));
+  }
+
   foreach($wpData->wp_category as $wpCategory)
   {
     array_push($categories, array("title"    => (string)$wpCategory->wp_cat_name,
                     "slug"    => (string)$wpCategory->wp_category_nicename,
-                    "description" => ""));
+                    "description" => (string)$wpCategory->wp_category_description));
   }
 
   // Get the posts and pages
@@ -174,8 +205,24 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
     // Post or a page?
     if($wpPost->wp_post_type == "post")
     {
-      // Insert into posts array
-      array_push($posts, array("title"    => (string)$wpPost->title,
+      // Using multiple categories
+      if ($useMultipleCategories == true)
+      {
+        // Insert into posts array
+        array_push($posts, array("title"    => (string)$wpPost->title,
+                   "description"  => (string)$wpPost->description,
+                   "slug"      => (string)$wpPost->wp_post_name,
+                   "html"      => (string)$wpPost->content_encoded,
+                   "created"    => (string)$wpPost->wp_post_date,
+                   "author"    => 1,
+                   "status"    => $status,
+                   "category"    => getCategoryID((string)$importedCategory[0], $categories),
+                   "comments"    => (($wpPost->wp_comment_status == "open") ? 1 : 0)));
+      }
+      else
+      {
+        // Insert into posts array
+        array_push($posts, array("title"    => (string)$wpPost->title,
                    "description"  => (string)$wpPost->description,
                    "slug"      => (string)$wpPost->wp_post_name,
                    "html"      => (string)$wpPost->content_encoded,
@@ -184,6 +231,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
                    "status"    => $status,
                    "category"    => getCategoryID((string)$wpPost->category, $categories),
                    "comments"    => (($wpPost->wp_comment_status == "open") ? 1 : 0)));
+      }
 
       // Get the comments
       foreach($wpPost->wp_comment as $wpComment)
@@ -232,6 +280,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
     // Truncate tables we need to override
     if(!@$mysql->query("TRUNCATE TABLE `" . $prefix . "categories`") ||
        !@$mysql->query("TRUNCATE TABLE `" . $prefix . "comments`") ||
+       !@$mysql->query("TRUNCATE TABLE `" . $prefix . "extend`") ||
        !@$mysql->query("TRUNCATE TABLE `" . $prefix . "page_meta`") ||
        !@$mysql->query("TRUNCATE TABLE `" . $prefix . "post_meta`") ||
        !@$mysql->query("TRUNCATE TABLE `" . $prefix . "posts`"))
@@ -254,6 +303,26 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
       {
         wp2anchor_log("Unable to set meta data [" . @$mysql->error . "]");
         break;
+      }
+    }
+
+    // Using multiple categories
+    if ($useMultipleCategories == true)
+    {
+      foreach($importedExtendedInfo as $key => $value)
+      {
+        // Create extend post fields
+        if(@$mysql->query("INSERT INTO `" . $prefix . "extend` ".
+            "(`id`, `type`, `field`, `key`, `label`, `attributes`) VALUES ".
+            "(NULL, 'post', 'text', '".$mysql->escape_string($key)."', '".$mysql->escape_string($value)."', '');"))
+        {
+          wp2anchor_log("Extended post info [<em>".$mysql->escape_string($value)."</em>]");
+        }
+        else
+        {
+          wp2anchor_log("Unable to extend post info [" . @$mysql->error . "]");
+          break;
+        }        
       }
     }
 
@@ -450,6 +519,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
     <?php } ?>
     <small>
       Wordpress to Anchor importer by <a href="http:// samhellawell.info">Sam Hellawell</a>.
+      Some modifications done by <a href="https://github.com/neverbot">neverbot</a>
       Using Anchor's installation template.
     </small>
   </body>
