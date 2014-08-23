@@ -61,9 +61,9 @@ $importedCategory = ['Imported',
                      'Post imported with wp2anchor'];
 // Fields for extended post info                     
 // Only used if $useMultipleCategories == true
-$importedExtendedInfo = array('imported-by' => 'Imported by',
-                              'imported-categories' => 'Imported categories',
-                              'imported-tags' => 'Imported tags');
+$importedExtendedInfo = array('imported-by' => 'Importer',
+                              'imported-categories' => 'Old categories',
+                              'imported-tags' => 'Old tags');
 
 
 /*
