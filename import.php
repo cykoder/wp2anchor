@@ -314,6 +314,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
        !@$mysql->query("TRUNCATE TABLE `" . $prefix . "comments`") ||
        !@$mysql->query("TRUNCATE TABLE `" . $prefix . "extend`") ||
        !@$mysql->query("TRUNCATE TABLE `" . $prefix . "page_meta`") ||
+       !@$mysql->query("TRUNCATE TABLE `" . $prefix . "pages`") ||
        !@$mysql->query("TRUNCATE TABLE `" . $prefix . "post_meta`") ||
        !@$mysql->query("TRUNCATE TABLE `" . $prefix . "posts`"))
     {
@@ -325,6 +326,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
                                          $prefix . "comments, " . 
                                          $prefix . "extend, " . 
                                          $prefix . "page_meta, " . 
+                                         $prefix . "pages, " . 
                                          $prefix . "post_meta, " . 
                                          $prefix . "posts" .
                                          ".");
