@@ -35,6 +35,8 @@
  * - Store categories and tags in new extended fields, so they won't be lost
  *   in the import process.
  * - Save WordPress category descriptions.
+ * - Wordpress slugs (which use urlencode) changed to the same kind of url slugs
+ *   used by Anchor, more human-readable.
  *
  * @author      neverbot
  * @link        https://github.com/neverbot
@@ -140,6 +142,20 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
     return 0;
   }
 
+  // Same slug creation code as in Anchor CMS, so the URLs are built the same way
+  function slug($str, $separator = '-') 
+  {
+    $a = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'Ā', 'ā', 'Ă', 'ă', 'Ą', 'ą', 'Ć', 'ć', 'Ĉ', 'ĉ', 'Ċ', 'ċ', 'Č', 'č', 'Ď', 'ď', 'Đ', 'đ', 'Ē', 'ē', 'Ĕ', 'ĕ', 'Ė', 'ė', 'Ę', 'ę', 'Ě', 'ě', 'Ĝ', 'ĝ', 'Ğ', 'ğ', 'Ġ', 'ġ', 'Ģ', 'ģ', 'Ĥ', 'ĥ', 'Ħ', 'ħ', 'Ĩ', 'ĩ', 'Ī', 'ī', 'Ĭ', 'ĭ', 'Į', 'į', 'İ', 'ı', 'Ĳ', 'ĳ', 'Ĵ', 'ĵ', 'Ķ', 'ķ', 'Ĺ', 'ĺ', 'Ļ', 'ļ', 'Ľ', 'ľ', 'Ŀ', 'ŀ', 'Ł', 'ł', 'Ń', 'ń', 'Ņ', 'ņ', 'Ň', 'ň', 'ŉ', 'Ō', 'ō', 'Ŏ', 'ŏ', 'Ő', 'ő', 'Œ', 'œ', 'Ŕ', 'ŕ', 'Ŗ', 'ŗ', 'Ř', 'ř', 'Ś', 'ś', 'Ŝ', 'ŝ', 'Ş', 'ş', 'Š', 'š', 'Ţ', 'ţ', 'Ť', 'ť', 'Ŧ', 'ŧ', 'Ũ', 'ũ', 'Ū', 'ū', 'Ŭ', 'ŭ', 'Ů', 'ů', 'Ű', 'ű', 'Ų', 'ų', 'Ŵ', 'ŵ', 'Ŷ', 'ŷ', 'Ÿ', 'Ź', 'ź', 'Ż', 'ż', 'Ž', 'ž', 'ſ', 'ƒ', 'Ơ', 'ơ', 'Ư', 'ư', 'Ǎ', 'ǎ', 'Ǐ', 'ǐ', 'Ǒ', 'ǒ', 'Ǔ', 'ǔ', 'Ǖ', 'ǖ', 'Ǘ', 'ǘ', 'Ǚ', 'ǚ', 'Ǜ', 'ǜ', 'Ǻ', 'ǻ', 'Ǽ', 'ǽ', 'Ǿ', 'ǿ');
+
+    $b = array('A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'L', 'l', 'L', 'l', 'L', 'l', 'l', 'l', 'N', 'n', 'N', 'n', 'N', 'n', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 's', 'f', 'O', 'o', 'U', 'u', 'A', 'a', 'I', 'i', 'O', 'o', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'A', 'a', 'AE', 'ae', 'O', 'o');
+
+    $str = str_replace($a, $b, $str);
+
+    // replace non letter or digits by separator
+    $str = preg_replace('#[^A-z0-9]#', $separator, $str);
+
+    return trim(strtolower($str), $separator);
+  }
 
   // Get file contents (you'll see why soon)
   $fileContents = file_get_contents($file);
@@ -185,14 +201,14 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
   if ($useMultipleCategories == true)
   {
     array_push($categories, array('title' => $importedCategory[0],
-                    'slug' => $importedCategory[1],
+                    'slug' => slug(urldecode($importedCategory[1])),
                     'description' => $importedCategory[2]));
   }
 
   foreach($wpData->wp_category as $wpCategory)
   {
     array_push($categories, array("title"       => (string)$wpCategory->wp_cat_name,
-                                  "slug"        => (string)$wpCategory->wp_category_nicename,
+                                  "slug"        => slug(urldecode((string)$wpCategory->wp_category_nicename)),
                                   "description" => (string)$wpCategory->wp_category_description));
   }
 
@@ -202,7 +218,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
   foreach($wpData->wp_tag as $wpTag)
   {
     array_push($tags, array("title"       => (string)$wpTag->wp_tag_name,
-                            "slug"        => (string)$wpTag->wp_tag_slug,
+                            "slug"        => slug(urldecode((string)$wpTag->wp_tag_slug)),
                             "description" => (string)$wpTag->wp_tag_description));
   }
 
@@ -240,7 +256,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
         // Insert into posts array
         array_push($posts, array("title"    => (string)$wpPost->title,
                    "description" => (string)$wpPost->description,
-                   "slug"        => (string)$wpPost->wp_post_name,
+                   "slug"        => slug(urldecode((string)$wpPost->wp_post_name)),
                    "html"        => (string)$wpPost->content_encoded,
                    "created"     => (string)$wpPost->wp_post_date,
                    "author"      => 1,
@@ -256,7 +272,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
         // Insert into posts array
         array_push($posts, array("title"    => (string)$wpPost->title,
                    "description" => (string)$wpPost->description,
-                   "slug"        => (string)$wpPost->wp_post_name,
+                   "slug"        => slug(urldecode((string)$wpPost->wp_post_name)),
                    "html"        => (string)$wpPost->content_encoded,
                    "created"     => (string)$wpPost->wp_post_date,
                    "author"      => 1,
@@ -282,7 +298,7 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
       // Insert into pages array
       array_push($pages, array("name"      => (string)$wpPost->title,
                    "title"     => (((string)$wpPost->description != "") ? (string)$wpPost->description : (string)$wpPost->title),
-                   "slug"      => (string)$wpPost->wp_post_name,
+                   "slug"      => slug(urldecode((string)$wpPost->wp_post_name)),
                    "content"   => (string)$wpPost->content_encoded,
                    "status"    => $status,
                    "redirect"  => ""));
