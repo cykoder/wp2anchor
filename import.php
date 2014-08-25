@@ -35,8 +35,9 @@
  * - Store categories and tags in new extended fields, so they won't be lost
  *   in the import process.
  * - Save WordPress category descriptions.
- * - Wordpress slugs (which use urlencode) changed to the same kind of url slugs
+ * - WordPress slugs (which use urlencode) changed to the same kind of url slugs
  *   used by Anchor, more human-readable.
+ * - WordPress does not export the posts comments ordered, it is done here.
  *
  * @author      neverbot
  * @link        https://github.com/neverbot
@@ -156,6 +157,13 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
 
     return trim(strtolower($str), $separator);
   }
+
+  // To order comment lists, which comes from the WordPress export unordered
+  function compare_comment_ids($a, $b)
+  {
+    if ((int)$a->wp_comment_id == (int)$b->wp_comment_id) return 0;
+    return ((int)$a->wp_comment_id < (int)$b->wp_comment_id) ? -1 : 1;
+  }  
 
   // Get file contents (you'll see why soon)
   $fileContents = file_get_contents($file);
@@ -282,7 +290,15 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
       }
 
       // Get the comments
+      $postComments = [];
+
+      // The WordPress export does not return the comments ordered
       foreach($wpPost->wp_comment as $wpComment)
+        array_push($postComments, $wpComment);
+
+      usort($postComments, 'compare_comment_ids');
+
+      foreach($postComments as $wpComment)
       {
         // Insert into comments array
         array_push($comments, array("post"    => count($posts),
