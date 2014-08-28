@@ -164,6 +164,11 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
     if ((int)$a->wp_comment_id == (int)$b->wp_comment_id) return 0;
     return ((int)$a->wp_comment_id < (int)$b->wp_comment_id) ? -1 : 1;
   }  
+  function compare_posts_ids($a, $b)
+  {
+    if ((int)$a->wp_post_id == (int)$b->wp_post_id) return 0;
+    return ((int)$a->wp_post_id < (int)$b->wp_post_id) ? -1 : 1;
+  } 
 
   // Get file contents (you'll see why soon)
   $fileContents = file_get_contents($file);
@@ -236,7 +241,18 @@ if(isset($file) && $file != "" && isset($mysqlInfo))
   $pages = array();
   $comments = array();
 
+  // Sometimes WordPress does not return the posts ordered by date/id
+  // we have to order them by ourselves to be sure
+  $orderedWpData = [];
+
   foreach($wpData->item as $wpPost)
+    array_push($orderedWpData, $wpPost);
+
+  usort($orderedWpData, 'compare_posts_ids');
+
+  $wpData = null;
+
+  foreach($orderedWpData as $wpPost)
   {
     // Get status
     $status = $wpPost->wp_status;
